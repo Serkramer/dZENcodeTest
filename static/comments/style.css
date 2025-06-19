@@ -1,0 +1,15 @@
+.comment {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-left: 4px solid #0d6efd;
+  border-radius: 0.25rem;
+}
+.replies {
+  margin-left: 2rem;
+  border-left: 2px dashed #ccc;
+  padding-left: 1rem;
+}
+.btn-group .btn {
+  font-family: monospace;
+}
