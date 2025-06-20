@@ -118,8 +118,8 @@ class CommentListView(FormMixin, ListView):
 
             # Сохранение файлов
             for file in uploaded_files:
-                file = resize_image_if_needed(file)
-                CommentFile.objects.create(comment=comment, file=file)
+                new_file = resize_image_if_needed(file)
+                CommentFile.objects.create(comment=comment, file=new_file)
 
             return redirect(self.get_success_url())
 

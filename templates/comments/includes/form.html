@@ -1,6 +1,6 @@
-<form method="post" enctype="multipart/form-data" class="border p-4 bg-white shadow-sm rounded">
+<form method="post" enctype="multipart/form-data" class="comment-form border p-4 bg-white shadow-sm rounded">
     {% csrf_token %}
-
+    <div id="reply-notice" style="display: none;"></div>
     {% if form.non_field_errors %}
         <div class="alert alert-danger">
             {{ form.non_field_errors }}

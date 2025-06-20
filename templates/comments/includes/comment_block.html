@@ -1,0 +1,34 @@
+<div class="comment mb-3 p-3 border rounded bg-white">
+    <strong>{{ comment.user_name }}</strong> ({{ comment.email }})<br>
+    {{ comment.text|safe }}<br>
+    <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+
+    {% if comment.files.exists %}
+        <div class="attachments mt-2">
+            {% for file in comment.files.all %}
+                {% if file.is_image %}
+                    <a href="{{ file.file.url }}" data-lightbox="comment-{{ comment.id }}"
+                       data-title="Комментарий от {{ comment.user_name }}">
+                        <img src="{{ file.file.url }}" width="100" class="img-thumbnail me-2">
+                    </a>
+                {% elif file.is_text %}
+                    <a href="{{ file.file.url }}" target="_blank">📄 Текстовый файл</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mt-2">
+        <button class="btn btn-sm btn-link text-primary"
+                onclick="showReplyForm(this, {{ comment.id }})">Ответить
+        </button>
+    </div>
+
+    {% if comment.replies.exists %}
+        <div class="replies mt-3 ps-3 border-start" style="margin-left: 1rem;">
+            {% for reply in comment.replies.all %}
+                {% include 'comments/includes/comment_block.html' with comment=reply %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

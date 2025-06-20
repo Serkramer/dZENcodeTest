@@ -5,31 +5,40 @@ from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
+
 def resize_image_if_needed(uploaded_file):
     ext = uploaded_file.name.split('.')[-1].lower()
     if ext not in ['jpg', 'jpeg', 'png', 'gif']:
-        return uploaded_file  # Ничего не делаем для .txt
+        return uploaded_file  # Текст — не обрабатываем
 
     try:
-        image = Image.open(uploaded_file)
+        # Считываем содержимое в память
+        image_data = uploaded_file.read()
+        image = Image.open(BytesIO(image_data))
+        image.load()  # Полная загрузка
+
+        # Если изображение уже маленькое — не обрезаем
         if image.width <= 320 and image.height <= 240:
-            return uploaded_file  # Уже маленькое — не изменяем
+            uploaded_file.seek(0)
+            return uploaded_file
 
-        image.thumbnail((320, 240), Image.ANTIALIAS)  # Уменьшение
+        # Масштабирование
+        image.thumbnail((320, 240), Image.Resampling.LANCZOS)
 
+        # Сохраняем уменьшенное изображение
         output = BytesIO()
         image_format = 'JPEG' if ext in ['jpg', 'jpeg'] else ext.upper()
         image.save(output, format=image_format)
         output.seek(0)
 
-        new_file = InMemoryUploadedFile(
-            output,
-            uploaded_file.field_name,
-            uploaded_file.name,
-            uploaded_file.content_type,
-            sys.getsizeof(output),
-            uploaded_file.charset
+        return InMemoryUploadedFile(
+            file=output,
+            field_name='file',
+            name=uploaded_file.name,
+            content_type=uploaded_file.content_type,
+            size=output.getbuffer().nbytes,
+            charset=None
         )
-        return new_file
     except Exception as e:
+        uploaded_file.seek(0)
         return uploaded_file
