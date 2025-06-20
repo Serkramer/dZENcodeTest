@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'captcha',
-
+    'rest_framework',
+    'drf_spectacular',
     'comments',
 ]
 
@@ -129,3 +130,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'dZENcode API',
+    'DESCRIPTION': 'Документация REST API для тестового задания',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+ALLOWED_TAGS = ['a', 'code', 'i', 'strong']
+ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}

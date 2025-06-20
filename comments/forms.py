@@ -2,70 +2,11 @@ from django import forms
 from django.core.validators import FileExtensionValidator
 from django.forms import modelformset_factory, ClearableFileInput
 from captcha.fields import CaptchaField
+
+from dZENcodeTest.settings import ALLOWED_TAGS, ALLOWED_ATTRIBUTES
 from .models import Comment, CommentFile
 import bleach
 
-ALLOWED_TAGS = ['a', 'code', 'i', 'strong']
-ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
-#
-#
-# class MultiFileInput(ClearableFileInput):
-#     allow_multiple_selected = True
-#
-#
-# class CommentForm(forms.ModelForm):
-#     captcha = CaptchaField(label='Введите CAPTCHA')
-#
-#     class Meta:
-#         model = Comment
-#         fields = ['user_name', 'email', 'home_page', 'text', 'captcha', 'parent']
-#
-#     def clean_user_name(self):
-#         username = self.cleaned_data['user_name']
-#         if not username.isalnum():
-#             raise forms.ValidationError("Можно вводить только латинские буквы и цифры.")
-#         return username
-#
-#     def clean_text(self):
-#         raw_text = self.cleaned_data['text']
-#         cleaned = bleach.clean(raw_text, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES, strip=True)
-#         return cleaned
-#
-#     def save(self, commit=True):
-#         comment = super().save(commit=False)
-#         parent_id = self.cleaned_data.get('parent_id')
-#         if parent_id:
-#             comment.parent = Comment.objects.filter(id=parent_id).first()
-#         if commit:
-#             comment.save()
-#         return comment
-#
-#
-#
-# class CommentFileForm(forms.ModelForm):
-#     class Meta:
-#         model = CommentFile
-#         fields = ['file']
-#         widgets = {
-#             'file': MultiFileInput(attrs={'multiple': True})
-#         }
-#
-#     def clean_file(self):
-#         file = self.cleaned_data['file']
-#         ext = file.name.split('.')[-1].lower()
-#         if ext not in ['jpg', 'jpeg', 'png', 'gif', 'txt']:
-#             raise forms.ValidationError(f"{file.name}: допустимы только JPG, JPEG, PNG, GIF, TXT.")
-#         if ext == 'txt' and file.size > 100 * 1024:
-#             raise forms.ValidationError(f"{file.name}: TXT-файл не должен превышать 100 КБ.")
-#         return file
-#
-#
-# CommentFileFormSet = modelformset_factory(
-#     CommentFile,
-#     form=CommentFileForm,
-#     extra=0,
-#     can_delete=False
-# )
 
 class MultipleFileInput(ClearableFileInput):
     allow_multiple_selected = True

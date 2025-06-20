@@ -8,62 +8,6 @@ from .functions import resize_image_if_needed
 from .models import Comment, CommentFile
 
 
-# class CommentView(FormView):
-#     template_name = 'comments/index.html'
-#     form_class = CommentForm
-#     success_url = reverse_lazy('comments:index')  # Убедись, что этот путь существует
-#
-#     def get_queryset(self):
-#         # Сортировка (по умолчанию LIFO — latest first)
-#         order_by = self.request.GET.get('sort', '-created_at')
-#         queryset = Comment.objects.filter(parent__isnull=True).order_by(order_by)
-#         return queryset
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#
-#         # Пагинация
-#         page = self.request.GET.get('page', 1)
-#         paginator = Paginator(self.get_queryset(), 25)
-#         comments_page = paginator.get_page(page)
-#
-#         context['comments'] = comments_page
-#         context['sort'] = self.request.GET.get('sort', '-created_at')
-#         return context
-#
-#
-#     def resize_image_if_needed(self, file):
-#         try:
-#             image = Image.open(file)
-#         except Exception:
-#             return file
-#         max_size = (320, 240)
-#         if image.width > 320 or image.height > 240:
-#             image.thumbnail(max_size)
-#             buffer = BytesIO()
-#             image.save(fp=buffer, format='PNG')
-#             return InMemoryUploadedFile(buffer, None, file.name, 'image/png', buffer.tell(), None)
-#         return file
-#
-#     def form_valid(self, form):
-#         comment = form.save()  # parent уже прикрепится в save()
-#         files = self.request.FILES.getlist('files')
-#
-#         for file in files:
-#             ext = file.name.split('.')[-1].lower()
-#             if ext not in ['jpg', 'jpeg', 'png', 'gif', 'txt']:
-#                 form.add_error(None, f"{file.name}: допустимы только JPG, JPEG, PNG, GIF, TXT.")
-#                 return self.form_invalid(form)
-#             if ext == 'txt' and file.size > 100 * 1024:
-#                 form.add_error(None, f"{file.name}: TXT-файл не должен превышать 100 КБ.")
-#                 return self.form_invalid(form)
-#             if ext in ['jpg', 'jpeg', 'png', 'gif']:
-#                 file = self.resize_image_if_needed(file)
-#
-#             CommentFile.objects.create(comment=comment, file=file)
-#
-#         return super().form_valid(form)
-
 
 class CommentListView(FormMixin, ListView):
     model = Comment
@@ -126,6 +70,6 @@ class CommentListView(FormMixin, ListView):
         # Добавление ошибок вручную, если были проблемы с файлами
         if file_errors:
             for msg in file_errors:
-                form.add_error('files', msg)
+                form.add_error(None, msg)
 
         return self.render_to_response(self.get_context_data(form=form))
