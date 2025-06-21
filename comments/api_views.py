@@ -1,3 +1,5 @@
+from captcha.helpers import captcha_image_url
+from captcha.models import CaptchaStore
 from drf_spectacular.utils import (
     extend_schema, OpenApiExample, OpenApiResponse, OpenApiParameter, OpenApiRequest
 )
@@ -5,6 +7,8 @@ from drf_spectacular.types import OpenApiTypes
 from rest_framework import viewsets, filters, mixins
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from comments.models import Comment
 from comments.serializers import CommentSerializer, CreateCommentSerializer
@@ -62,3 +66,15 @@ class CommentViewSet(mixins.ListModelMixin,
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+
+
+class CaptchaAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        captcha = CaptchaStore.generate_key()
+        image_url = captcha_image_url(captcha)
+
+        return Response({
+            "captcha_key": captcha,
+            "image_url": request.build_absolute_uri(image_url)
+        })

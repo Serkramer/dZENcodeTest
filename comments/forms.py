@@ -42,7 +42,7 @@ class CommentForm(forms.Form):
 
     text = forms.CharField(
         label="Text*",
-        validators=[MaxLengthValidator(3000)],
+        validators=[MaxLengthValidator(5000)],
         widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Введите текст сообщения...', 'class': 'form-control'}),
     )
 

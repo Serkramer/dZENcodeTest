@@ -12,7 +12,7 @@ class Comment(models.Model):
                                  )
     email = models.EmailField(verbose_name="Email")
     home_page = models.URLField(blank=True, null=True, verbose_name="Home page")
-    text = models.TextField(verbose_name="Text")
+    text = models.TextField(verbose_name="Text", max_length=5000)
     created_at = models.DateTimeField(default=now)
     parent = models.ForeignKey(
         'self',
