@@ -14,7 +14,7 @@
     <h2>Оставить комментарий</h2>
     {% include 'comments/includes/form.html' %}
 
-    <h2 class="mt-4">Комментарии</h2>
+    {% if comments %}<h2 class="mt-4">Комментарии</h2> {% endif %}
     {% for comment in comments %}
     {% include 'comments/includes/comment_block.html' with comment=comment %}
 {% endfor %}
