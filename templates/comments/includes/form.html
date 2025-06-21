@@ -1,4 +1,4 @@
-<form method="post" enctype="multipart/form-data" class="comment-form border p-4 bg-white shadow-sm rounded">
+<form id="comment-form" method="post" enctype="multipart/form-data" class="comment-form border p-4 bg-white shadow-sm rounded">
     {% csrf_token %}
     <div id="reply-notice" style="display: none;"></div>
     {% if form.non_field_errors %}
@@ -43,11 +43,10 @@
 
     <div class="mb-3">
         <label for="id_files" class="form-label">Файлы</label>
-        <input type="file" name="files" id="id_files" multiple class="form-control">
-        {% if form.errors.files %}
-            <div class="text-danger">{{ form.errors.files }}</div>
-        {% endif %}
+        <input type="file" name="files" id="id_files" multiple class="form-control" accept=".jpg,.jpeg,.png,.gif,.txt">
+        <div class="text-danger" id="file-errors"></div>
     </div>
+
 
     <div class="mb-3">
         {{ form.captcha.label_tag }}

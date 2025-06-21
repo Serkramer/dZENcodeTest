@@ -13,7 +13,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 class CommentPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = 'page_size'
-
+from rest_framework.permissions import IsAuthenticated
 
 
 class CommentViewSet(mixins.ListModelMixin,
@@ -22,6 +22,7 @@ class CommentViewSet(mixins.ListModelMixin,
 
     queryset = Comment.objects.filter(parent__isnull=True).order_by('-created_at')
     pagination_class = CommentPagination
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = ['user_name', 'email', 'created_at']
     ordering = ['-created_at']

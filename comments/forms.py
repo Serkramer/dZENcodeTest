@@ -6,7 +6,7 @@ from captcha.fields import CaptchaField
 from dZENcodeTest.settings import ALLOWED_TAGS, ALLOWED_ATTRIBUTES
 from .models import Comment, CommentFile
 import bleach
-
+import re
 
 class MultipleFileInput(ClearableFileInput):
     allow_multiple_selected = True
@@ -15,24 +15,35 @@ class MultipleFileInput(ClearableFileInput):
 class CommentForm(forms.Form):
     user_name = forms.CharField(
         max_length=255,
-        label="User Name",
+        label="User Name *",
         help_text="Только латинские буквы и цифры.",
-        widget=forms.TextInput(attrs={'placeholder': 'User123', 'class': 'form-control'}),
+        widget=forms.TextInput(attrs={
+            'placeholder': 'User123',
+            'class': 'form-control',
+            'pattern': '[a-zA-Z0-9]+',
+            'title': 'Допустимы только латинские буквы и цифры.'
+        }),
     )
 
     email = forms.EmailField(
-        label="Email",
-        widget=forms.EmailInput(attrs={'placeholder': 'example@example.com', 'class': 'form-control'}),
+        label="Email *",
+        help_text="Введите корректный email.",
+        widget=forms.EmailInput(attrs={
+            'placeholder': 'example@example.com',
+            'class': 'form-control',
+            'title': 'Введите корректный email.',
+            'required': True
+        }),
     )
 
     home_page = forms.URLField(
-        label="Home page",
+        label="Ссылка на сайт (необязательно)",
         required=False,
         widget=forms.URLInput(attrs={'placeholder': 'https://', 'class': 'form-control'}),
     )
 
     text = forms.CharField(
-        label="Text",
+        label="Text*",
         widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Введите текст сообщения...', 'class': 'form-control'}),
     )
 
@@ -40,10 +51,9 @@ class CommentForm(forms.Form):
 
     parent_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
-
     def clean_user_name(self):
         username = self.cleaned_data['user_name']
-        if not username.isalnum():
+        if not re.fullmatch(r'[a-zA-Z0-9]+', username):
             raise forms.ValidationError("Можно вводить только латинские буквы и цифры.")
         return username
 
@@ -53,8 +63,8 @@ class CommentForm(forms.Form):
         return cleaned
 
     def clean_home_page(self):
-        home_page = self.cleaned_data.get('home_page')
-        if home_page == '':
-            return None
+        home_page = self.cleaned_data.get('home_page', '')
+        if home_page and not re.match(r'^https?://', home_page):
+            home_page = 'https://' + home_page
         return home_page
 

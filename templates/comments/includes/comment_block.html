@@ -1,5 +1,5 @@
 <div class="comment mb-3 p-3 border rounded bg-white">
-    <strong>{{ comment.user_name }}</strong> ({{ comment.email }})<br>
+    <strong>{{ comment.user_name }}</strong> ({{ comment.email }})<br> {{ comment.home_page }}<br>
     {{ comment.text|safe }}<br>
     <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
 

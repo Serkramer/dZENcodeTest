@@ -96,5 +96,89 @@
     }
 </script>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('.comment-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        let errors = [];
+
+        const username = form.querySelector('input[name="user_name"]').value.trim();
+        const email = form.querySelector('input[name="email"]').value.trim();
+        const text = form.querySelector('textarea[name="text"]').value.trim();
+        const files = form.querySelector('input[name="files"]').files;
+
+        const usernameRegex = /^[a-zA-Z0-9]+$/;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!usernameRegex.test(username)) {
+            errors.push("Имя пользователя должно содержать только латинские буквы и цифры.");
+        }
+
+        if (!emailRegex.test(email)) {
+            errors.push("Введите корректный email.");
+        }
+
+        if (!text) {
+            errors.push("Поле текста не может быть пустым.");
+        }
+
+        for (const file of files) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            const allowed = ['jpg', 'jpeg', 'png', 'gif', 'txt'];
+            if (!allowed.includes(ext)) {
+                errors.push(`Файл ${file.name}: недопустимый формат.`);
+            }
+            if (ext === 'txt' && file.size > 100 * 1024) {
+                errors.push(`Файл ${file.name}: TXT-файл больше 100KB.`);
+            }
+        }
+
+        if (errors.length > 0) {
+            e.preventDefault();
+            alert(errors.join("\n"));
+        }
+    });
+});
+</script>
+
+<script>
+function wrapTag(tag) {
+    const textarea = document.querySelector('textarea[name="text"]');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+
+    const wrapped = `<${tag}>${selectedText}</${tag}>`;
+    textarea.value = before + wrapped + after;
+
+    textarea.focus();
+    textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2); // ставим курсор внутрь
+}
+
+function insertLink() {
+    const textarea = document.querySelector('textarea[name="text"]');
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end) || "текст ссылки";
+
+    const url = prompt("Введите URL:", "https://");
+    if (!url) return;
+
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+    const linked = `<a href="${url}">${selectedText}</a>`;
+
+    textarea.value = before + linked + after;
+    textarea.focus();
+    textarea.setSelectionRange(before.length + 9, before.length + 9 + url.length); // курсор на href
+}
+</script>
+
 </body>
 </html>
