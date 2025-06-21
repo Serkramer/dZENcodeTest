@@ -11,22 +11,53 @@
 <body class="bg-light">
 
 <div class="container mt-5">
+    <div id="comment-success-message" class="alert alert-success d-none" role="alert"></div>
     <h2>Оставить комментарий</h2>
     {% include 'comments/includes/form.html' %}
 
     {% if comments %}<h2 class="mt-4">Комментарии</h2> {% endif %}
-    {% for comment in comments %}
-    {% include 'comments/includes/comment_block.html' with comment=comment %}
-{% endfor %}
+    {% with sort=request.GET.sort|default:"" order=request.GET.order|default:"desc" %}
+        <div class="mb-3">
+            <strong>Сортировка:</strong>
+
+            <a href="?sort=user_name&order=asc"
+               class="btn btn-sm {% if sort == 'user_name' and order == 'asc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Name ↑</a>
+            <a href="?sort=user_name&order=desc"
+               class="btn btn-sm {% if sort == 'user_name' and order == 'desc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Name ↓</a>
+
+            <a href="?sort=email&order=asc"
+               class="btn btn-sm {% if sort == 'email' and order == 'asc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Email ↑</a>
+            <a href="?sort=email&order=desc"
+               class="btn btn-sm {% if sort == 'email' and order == 'desc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Email ↓</a>
+
+            <a href="?sort=created_at&order=asc"
+               class="btn btn-sm {% if sort == 'created_at' and order == 'asc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Дата ↑</a>
+            <a href="?sort=created_at&order=desc"
+               class="btn btn-sm {% if sort == 'created_at' and order == 'desc' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Дата ↓</a>
+        </div>
+    {% endwith %}
+    <div class="comments-list">
+        {% for comment in comments %}
+            {% include 'comments/includes/comment_block.html' with comment=comment %}
+        {% endfor %}
+    </div>
 
     <div class="pagination">
         {% if is_paginated %}
             {% if page_obj.has_previous %}
-                <a href="?page={{ page_obj.previous_page_number }}">← Назад</a>
+                <a href="?page={{ page_obj.previous_page_number }}&sort={{ request.GET.sort }}&order={{ request.GET.order }}">←
+                    Назад</a>
             {% endif %}
             Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
             {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">Вперёд →</a>
+                <a href="?page={{ page_obj.next_page_number }}&sort={{ request.GET.sort }}&order={{ request.GET.order }}">Вперёд
+                    →</a>
             {% endif %}
         {% endif %}
     </div>
@@ -34,150 +65,129 @@
 
 <!-- Шаблон для inline-формы -->
 <template id="reply-form-template">
-    <form method="post" enctype="multipart/form-data" class="reply-form border p-3 bg-light rounded mt-3">
-        {% csrf_token %}
-        <input type="hidden" name="parent_id" value="">
 
-        <div class="mb-2">
-            <input type="text" name="user_name" class="form-control" placeholder="Ваше имя" required>
-        </div>
-
-        <div class="mb-2">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
-        </div>
-
-        <div class="mb-2">
-            <input type="url" name="home_page" class="form-control" placeholder="Сайт (необязательно)">
-        </div>
-
-        <div class="mb-2">
-            <textarea name="text" class="form-control" rows="3" placeholder="Сообщение" required></textarea>
-        </div>
-
-        <div class="mb-2">
-            <input type="file" name="files" multiple class="form-control">
-        </div>
-
-        <div class="mb-2">
-            <label>CAPTCHA:</label>
-            {{ form.captcha }}
-        </div>
-
-        <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-sm btn-primary">Отправить</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelInlineReply(this)">Отменить
-            </button>
-        </div>
-    </form>
 </template>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
 
 
-
 <script>
+    // Обработчик оборачивания текста в теги
+    function wrapTag(tag) {
+        const textarea = document.querySelector('textarea[name="text"]');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+
+        const before = textarea.value.substring(0, start);
+        const after = textarea.value.substring(end);
+
+        const wrapped = `<${tag}>${selectedText}</${tag}>`;
+        textarea.value = before + wrapped + after;
+
+        textarea.focus();
+        textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2);
+    }
+
+    function insertLink() {
+        const textarea = document.querySelector('textarea[name="text"]');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end) || "текст ссылки";
+
+        const url = prompt("Введите URL:", "https://");
+        if (!url) return;
+
+        const before = textarea.value.substring(0, start);
+        const after = textarea.value.substring(end);
+        const linked = `<a href="${url}">${selectedText}</a>`;
+
+        textarea.value = before + linked + after;
+        textarea.focus();
+        textarea.setSelectionRange(before.length + 9, before.length + 9 + url.length);
+    }
+
+    // Показать inline-форму ответа (AJAX-загрузка)
     function showReplyForm(button, parentId) {
-        // Удалить предыдущую форму
         document.querySelectorAll('.reply-form').forEach(el => el.remove());
 
-        const template = document.getElementById('reply-form-template');
-        const formClone = template.content.cloneNode(true);
+        const url = "{% url 'comments:load_comment_form' %}";
 
-        // Установить parent_id
-        formClone.querySelector('input[name="parent_id"]').value = parentId;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.createElement('div');
+                container.innerHTML = data.form_html;
 
-        // Вставить форму под комментарием
-        button.parentNode.appendChild(formClone);
+                const form = container.querySelector('form');
+                form.classList.add("reply-form", "border", "p-3", "bg-light", "rounded", "mt-3");
+                form.querySelector('input[name="parent_id"]').value = parentId;
+
+                button.parentNode.appendChild(form);
+            });
     }
 
-    function cancelInlineReply(btn) {
-        btn.closest('.reply-form').remove();
-    }
-</script>
+    // Полная AJAX-отправка формы (включая CAPTCHA, файлы и inline)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.addEventListener('submit', function (e) {
+            const form = e.target.closest('form.comment-form');
+            if (!form) return;
 
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('.comment-form');
-    if (!form) return;
-
-    form.addEventListener('submit', function (e) {
-        let errors = [];
-
-        const username = form.querySelector('input[name="user_name"]').value.trim();
-        const email = form.querySelector('input[name="email"]').value.trim();
-        const text = form.querySelector('textarea[name="text"]').value.trim();
-        const files = form.querySelector('input[name="files"]').files;
-
-        const usernameRegex = /^[a-zA-Z0-9]+$/;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!usernameRegex.test(username)) {
-            errors.push("Имя пользователя должно содержать только латинские буквы и цифры.");
-        }
-
-        if (!emailRegex.test(email)) {
-            errors.push("Введите корректный email.");
-        }
-
-        if (!text) {
-            errors.push("Поле текста не может быть пустым.");
-        }
-
-        for (const file of files) {
-            const ext = file.name.split('.').pop().toLowerCase();
-            const allowed = ['jpg', 'jpeg', 'png', 'gif', 'txt'];
-            if (!allowed.includes(ext)) {
-                errors.push(`Файл ${file.name}: недопустимый формат.`);
-            }
-            if (ext === 'txt' && file.size > 100 * 1024) {
-                errors.push(`Файл ${file.name}: TXT-файл больше 100KB.`);
-            }
-        }
-
-        if (errors.length > 0) {
             e.preventDefault();
-            alert(errors.join("\n"));
-        }
+
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        return response.json().then(data => {
+                            throw data;
+                        });
+                    }
+                })
+                .then(data => {
+                    if (form.classList.contains('reply-form')) {
+                        form.closest('.comment').querySelector('.replies')?.remove();
+                        const repliesDiv = document.createElement('div');
+                        repliesDiv.classList.add('replies', 'mt-3', 'ps-3', 'border-start');
+                        repliesDiv.innerHTML = data.comment_html;
+                        form.closest('.comment').appendChild(repliesDiv);
+
+                        form.remove();
+                    } else {
+                        const successBox = document.getElementById('comment-success-message');
+                        if (successBox && data.message) {
+                            successBox.textContent = data.message;
+                            successBox.classList.remove('d-none');
+                            setTimeout(() => successBox.classList.add('d-none'), 5000);
+                        }
+                        form.reset();
+                        const commentsList = document.querySelector('.comments-list');
+                        if (commentsList) {
+                            commentsList.insertAdjacentHTML('afterbegin', data.comment_html);
+                        }
+                    }
+                })
+                .catch(data => {
+                    if (data.form_html) {
+                        const container = document.createElement('div');
+                        container.innerHTML = data.form_html;
+                        const newForm = container.querySelector('form');
+                        newForm.classList.add(...form.classList);
+                        form.replaceWith(newForm);
+                    }
+                });
+        });
     });
-});
-</script>
-
-<script>
-function wrapTag(tag) {
-    const textarea = document.querySelector('textarea[name="text"]');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-
-    const before = textarea.value.substring(0, start);
-    const after = textarea.value.substring(end);
-
-    const wrapped = `<${tag}>${selectedText}</${tag}>`;
-    textarea.value = before + wrapped + after;
-
-    textarea.focus();
-    textarea.setSelectionRange(start + tag.length + 2, end + tag.length + 2); // ставим курсор внутрь
-}
-
-function insertLink() {
-    const textarea = document.querySelector('textarea[name="text"]');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end) || "текст ссылки";
-
-    const url = prompt("Введите URL:", "https://");
-    if (!url) return;
-
-    const before = textarea.value.substring(0, start);
-    const after = textarea.value.substring(end);
-    const linked = `<a href="${url}">${selectedText}</a>`;
-
-    textarea.value = before + linked + after;
-    textarea.focus();
-    textarea.setSelectionRange(before.length + 9, before.length + 9 + url.length); // курсор на href
-}
 </script>
 
 </body>

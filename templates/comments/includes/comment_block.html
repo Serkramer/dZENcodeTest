@@ -3,6 +3,13 @@
     {{ comment.text|safe }}<br>
     <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
 
+    {% if comment.parent %}
+        <div class="bg-light p-2 border-start mb-2 small text-muted">
+            <strong>{{ comment.parent.user_name }}</strong>:
+            {{ comment.parent.text|truncatechars:100|safe }}
+        </div>
+    {% endif %}
+
     {% if comment.files.exists %}
         <div class="attachments mt-2">
             {% for file in comment.files.all %}

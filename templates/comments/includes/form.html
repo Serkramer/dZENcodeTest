@@ -1,28 +1,43 @@
 <form id="comment-form" method="post" enctype="multipart/form-data" class="comment-form border p-4 bg-white shadow-sm rounded">
     {% csrf_token %}
     <div id="reply-notice" style="display: none;"></div>
+
     {% if form.non_field_errors %}
         <div class="alert alert-danger">
-            {{ form.non_field_errors }}
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
         </div>
     {% endif %}
 
     <div class="mb-3">
         {{ form.user_name.label_tag }}
-        {{ form.user_name }}
-        {{ form.user_name.errors }}
+        <input type="text" name="{{ form.user_name.name }}" value="{{ form.user_name.value|default:'' }}" 
+               class="form-control{% if form.user_name.errors %} is-invalid{% endif %}" 
+               placeholder="User123" pattern="[a-zA-Z0-9]+" required>
+        {% for error in form.user_name.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <div class="mb-3">
         {{ form.email.label_tag }}
-        {{ form.email }}
-        {{ form.email.errors }}
+        <input type="email" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}"
+               class="form-control{% if form.email.errors %} is-invalid{% endif %}" 
+               placeholder="example@example.com" required>
+        {% for error in form.email.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <div class="mb-3">
         {{ form.home_page.label_tag }}
-        {{ form.home_page }}
-        {{ form.home_page.errors }}
+        <input type="url" name="{{ form.home_page.name }}" value="{{ form.home_page.value|default:'' }}"
+               class="form-control{% if form.home_page.errors %} is-invalid{% endif %}" 
+               placeholder="https://">
+        {% for error in form.home_page.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <div class="mb-3">
@@ -30,15 +45,17 @@
         <div class="mb-2">
             <div class="btn-group btn-group-sm mb-2" role="group">
                 <button type="button" class="btn btn-outline-secondary" onclick="wrapTag('i')"><i>i</i></button>
-                <button type="button" class="btn btn-outline-secondary" onclick="wrapTag('strong')">
-                    <strong>bold</strong></button>
-                <button type="button" class="btn btn-outline-secondary" onclick="wrapTag('code')">
-                    <code>&lt;code&gt;</code></button>
+                <button type="button" class="btn btn-outline-secondary" onclick="wrapTag('strong')"><strong>bold</strong></button>
+                <button type="button" class="btn btn-outline-secondary" onclick="wrapTag('code')"><code>&lt;code&gt;</code></button>
                 <button type="button" class="btn btn-outline-secondary" onclick="insertLink()">a</button>
             </div>
         </div>
-        {{ form.text }}
-        {{ form.text.errors }}
+        <textarea name="{{ form.text.name }}" rows="5" 
+                  class="form-control{% if form.text.errors %} is-invalid{% endif %}" 
+                  placeholder="Введите текст сообщения...">{{ form.text.value|default:'' }}</textarea>
+        {% for error in form.text.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
     </div>
 
     <div class="mb-3">
@@ -47,11 +64,12 @@
         <div class="text-danger" id="file-errors"></div>
     </div>
 
-
     <div class="mb-3">
         {{ form.captcha.label_tag }}
-        <div class="mb-2">{{ form.captcha }}</div>
-        {{ form.captcha.errors }}
+        {{ form.captcha }}
+        {% for error in form.captcha.errors %}
+            <div class="invalid-feedback d-block">{{ error }}</div>
+        {% endfor %}
     </div>
 
     {{ form.parent_id }} {# hidden #}

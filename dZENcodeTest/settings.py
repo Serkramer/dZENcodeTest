@@ -161,3 +161,4 @@ SPECTACULAR_SETTINGS = {
 
 ALLOWED_TAGS = ['a', 'code', 'i', 'strong']
 ALLOWED_ATTRIBUTES = {'a': ['href', 'title']}
+ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'txt']

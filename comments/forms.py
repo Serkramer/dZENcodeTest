@@ -1,15 +1,13 @@
 from django import forms
-from django.core.validators import FileExtensionValidator
-from django.forms import modelformset_factory, ClearableFileInput
+
 from captcha.fields import CaptchaField
+from django.core.validators import MaxLengthValidator
 
 from dZENcodeTest.settings import ALLOWED_TAGS, ALLOWED_ATTRIBUTES
-from .models import Comment, CommentFile
+
 import bleach
 import re
 
-class MultipleFileInput(ClearableFileInput):
-    allow_multiple_selected = True
 
 
 class CommentForm(forms.Form):
@@ -44,6 +42,7 @@ class CommentForm(forms.Form):
 
     text = forms.CharField(
         label="Text*",
+        validators=[MaxLengthValidator(3000)],
         widget=forms.Textarea(attrs={'rows': 5, 'placeholder': 'Введите текст сообщения...', 'class': 'form-control'}),
     )
 
